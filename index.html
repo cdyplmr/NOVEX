@@ -6,9 +6,13 @@
   <meta name="theme-color" content="#080808">
   <meta name="description" content="NOVEX — independent software for sound, experimentation and making things that do not quite fit anywhere else.">
   <title>NOVEX — Software for Sound</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
   <style>
     :root {
       color-scheme: dark;
@@ -18,129 +22,953 @@
       --line: #30302d;
       --lime: #d9ff45;
       --page-pad: clamp(1.2rem, 4.4vw, 4.8rem);
-      --font: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+      --font: "IBM Plex Mono", monospace;
     }
+
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
-    body {
-      margin: 0; background: var(--bg); color: var(--fg);
-      font-family: var(--font); font-weight: 400; line-height: 1.55;
-      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 5rem;
     }
-    a { color: inherit; text-decoration: none; }
-    button, input { font: inherit; }
-    ::selection { background: var(--lime); color: var(--bg); }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      background-image: radial-gradient(
+        ellipse at 50% 0%,
+        rgba(217,255,69,.035),
+        transparent 48%
+      );
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      opacity: .12;
+      background-image:
+        linear-gradient(rgba(242,241,236,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242,241,236,.025) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(to bottom, black, transparent 85%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    ::selection {
+      background: var(--lime);
+      color: var(--bg);
+    }
+
     .site-header {
-      position: fixed; z-index: 20; inset: 0 0 auto; display: flex;
-      align-items: center; justify-content: space-between; padding: 1.2rem var(--page-pad);
-      background: linear-gradient(to bottom, rgba(8,8,8,.96), rgba(8,8,8,.72), transparent);
+      position: fixed;
+      z-index: 20;
+      inset: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem var(--page-pad);
+      background: linear-gradient(
+        to bottom,
+        rgba(8,8,8,.96),
+        rgba(8,8,8,.72),
+        transparent
+      );
       backdrop-filter: blur(10px);
     }
-    .wordmark { font-weight: 700; letter-spacing: -.09em; font-size: 1.15rem; }
-    .nav { display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.8rem); }
-    .nav a { font-size: .72rem; letter-spacing: .08em; transition: color .25s ease; }
-    .nav a:hover, .nav a:focus-visible { color: var(--lime); }
-    a:focus-visible, button:focus-visible { outline: 1px solid var(--lime); outline-offset: 5px; }
+
+    .wordmark {
+      font-weight: 700;
+      letter-spacing: -.09em;
+      font-size: 1.15rem;
+    }
+
+    .wordmark::after {
+      content: " / SYSTEMS";
+      font-size: .52rem;
+      letter-spacing: .08em;
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: .8rem;
+      vertical-align: middle;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: clamp(1rem, 3vw, 2.8rem);
+    }
+
+    .nav a {
+      position: relative;
+      font-size: .72rem;
+      letter-spacing: .08em;
+      transition: color .25s ease;
+    }
+
+    .nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 100%;
+      bottom: -.45rem;
+      height: 1px;
+      background: var(--lime);
+      transition: right .25s ease;
+    }
+
+    .nav a:hover,
+    .nav a:focus-visible {
+      color: var(--lime);
+    }
+
+    .nav a:hover::after,
+    .nav a:focus-visible::after {
+      right: 0;
+    }
+
+    a:focus-visible,
+    button:focus-visible {
+      outline: 1px solid var(--lime);
+      outline-offset: 5px;
+    }
+
+    /* HERO */
+
     .hero {
-      min-height: 100svh; min-height: 100vh; position: relative; overflow: hidden;
-      display: flex; flex-direction: column; justify-content: space-between;
+      min-height: 100vh;
+      min-height: 100svh;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       padding: 8.4rem var(--page-pad) 2.2rem;
+      isolation: isolate;
     }
-    .eyebrow { font-size: .68rem; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
-    .hero-center { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-color: rgba(217,255,69,.6);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      top: 6.5rem;
+      left: var(--page-pad);
+      border-top: 1px solid;
+      border-left: 1px solid;
+    }
+
+    .hero::after {
+      bottom: 1.4rem;
+      right: var(--page-pad);
+      border-bottom: 1px solid;
+      border-right: 1px solid;
+    }
+
+    .hero-index {
+      position: absolute;
+      right: var(--page-pad);
+      top: 7.2rem;
+      color: var(--muted);
+      font-size: .6rem;
+      letter-spacing: .12em;
+      writing-mode: vertical-rl;
+    }
+
+    .hero-status {
+      position: absolute;
+      left: var(--page-pad);
+      bottom: 7.2rem;
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      color: var(--muted);
+      font-size: .58rem;
+      letter-spacing: .1em;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 10px rgba(217,255,69,.65);
+    }
+
+    .eyebrow {
+      font-size: .68rem;
+      letter-spacing: .12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .hero-center {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
     .orbit {
-      position: absolute; width: min(68vw, 760px); aspect-ratio: 1; border: 1px solid rgba(217,255,69,.14);
-      border-radius: 50%; animation: rotate 48s linear infinite;
+      position: absolute;
+      width: min(68vw, 760px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(217,255,69,.14);
+      border-radius: 50%;
+      animation: rotate 48s linear infinite;
+      background: repeating-conic-gradient(
+        from 0deg,
+        rgba(217,255,69,.12) 0deg .15deg,
+        transparent .15deg 15deg
+      );
+      mask-image: radial-gradient(
+        circle,
+        transparent 45%,
+        black 45.2%,
+        black 45.5%,
+        transparent 45.7%
+      );
     }
-    .orbit::before, .orbit::after { content: ""; position: absolute; inset: 11%; border: 1px solid rgba(242,241,236,.08); border-radius: 50%; }
-    .orbit::after { inset: 24%; border-color: rgba(217,255,69,.09); }
-    .orbit-dot { position: absolute; top: 12%; left: 50%; width: 7px; height: 7px; background: var(--lime); border-radius: 50%; box-shadow: 0 0 18px rgba(217,255,69,.3); }
+
+    .orbit::before,
+    .orbit::after {
+      content: "";
+      position: absolute;
+      inset: 11%;
+      border: 1px solid rgba(242,241,236,.08);
+      border-radius: 50%;
+    }
+
+    .orbit::after {
+      inset: 24%;
+      border-color: rgba(217,255,69,.09);
+    }
+
+    .orbit-dot {
+      position: absolute;
+      top: 12%;
+      left: 50%;
+      width: 7px;
+      height: 7px;
+      background: var(--lime);
+      border-radius: 50%;
+      box-shadow: 0 0 18px rgba(217,255,69,.3);
+    }
+
+    .orbit-crosshair {
+      position: absolute;
+      width: min(80vw, 900px);
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(242,241,236,.08),
+        transparent
+      );
+    }
+
+    .orbit-crosshair.vertical {
+      width: 1px;
+      height: min(80vw, 900px);
+      background: linear-gradient(
+        180deg,
+        transparent,
+        rgba(242,241,236,.08),
+        transparent
+      );
+    }
+
     .hero-title {
-      position: relative; z-index: 1; margin: 0; font-size: clamp(4.1rem, 18.2vw, 19rem);
-      font-weight: 600; letter-spacing: -.105em; line-height: .78; transform: translateX(-.035em);
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      font-size: clamp(4.1rem, 18.2vw, 19rem);
+      font-weight: 600;
+      letter-spacing: -.105em;
+      line-height: .78;
+      transform: translateX(-.035em);
       animation: title-in 1.1s cubic-bezier(.2,.75,.2,1) both;
+      text-shadow: 0 0 70px rgba(242,241,236,.045);
     }
-    .hero-bottom { display: flex; align-items: end; justify-content: space-between; gap: 2rem; position: relative; z-index: 2; }
-    .hero-bottom p { max-width: 36rem; margin: .8rem 0 0; font-size: clamp(.85rem, 1.25vw, 1.05rem); }
-    .scroll-cue { color: var(--muted); font-size: .68rem; letter-spacing: .1em; white-space: nowrap; }
-    .ticker { overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: .9rem 0; }
-    .ticker-track { display: flex; width: max-content; animation: ticker 32s linear infinite; }
-    .ticker span { padding-right: 2.5rem; color: var(--lime); font-size: .7rem; letter-spacing: .13em; white-space: nowrap; }
-    .section { padding: clamp(6rem, 12vw, 12rem) var(--page-pad); }
-    .section-label { display: block; color: var(--muted); font-size: .7rem; letter-spacing: .1em; margin-bottom: clamp(2.5rem, 6vw, 6rem); }
-    .statement { max-width: 16ch; font-size: clamp(2.6rem, 7.8vw, 8rem); letter-spacing: -.085em; line-height: 1.03; font-weight: 500; margin: 0; }
-    .statement .dim { color: #777772; }
-    .product-intro { margin-top: clamp(7rem, 16vw, 16rem); }
-    .micro-label { font-size: .68rem; color: var(--muted); letter-spacing: .12em; margin-bottom: 1.1rem; }
-    .product-title { margin: 0; font-size: clamp(2.5rem, 10.7vw, 10.5rem); letter-spacing: -.09em; line-height: .98; font-weight: 500; overflow-wrap: anywhere; }
-    .platforms { color: var(--lime); margin-top: 1.4rem; font-size: .72rem; letter-spacing: .12em; }
-    .description-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 4rem; }
-    .description-grid p { color: var(--muted); max-width: 34rem; margin: 0; font-size: .9rem; }
-    .subsection { margin-top: clamp(6rem, 12vw, 12rem); display: grid; grid-template-columns: minmax(130px, .55fr) 1.45fr; gap: 2rem; border-top: 1px solid var(--line); padding-top: 1.5rem; }
-    .subsection h3 { font-size: .7rem; letter-spacing: .1em; font-weight: 400; color: var(--muted); margin: .35rem 0 0; }
-    .subsection p { max-width: 48rem; font-size: clamp(1rem, 2.1vw, 1.7rem); line-height: 1.45; margin: 0; letter-spacing: -.035em; }
-    .buy-heading { max-width: 17ch; font-size: clamp(2.7rem, 7.5vw, 7.5rem); letter-spacing: -.08em; line-height: 1.05; font-weight: 500; margin: 0 0 5rem; }
-    .platform-group { margin-top: 4rem; }
-    .platform-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--fg); padding-bottom: 1rem; margin-bottom: .25rem; }
-    .platform-heading h3 { font-size: .75rem; font-weight: 400; letter-spacing: .1em; margin: 0; }
-    .platform-heading span { color: var(--muted); font-size: .68rem; }
+
+    .hero-bottom {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-bottom p {
+      max-width: 36rem;
+      margin: .8rem 0 0;
+      font-size: clamp(.85rem, 1.25vw, 1.05rem);
+    }
+
+    .scroll-cue {
+      color: var(--muted);
+      font-size: .68rem;
+      letter-spacing: .1em;
+      white-space: nowrap;
+    }
+
+    /* MOVING TEXT */
+
+    .ticker {
+      overflow: hidden;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: .9rem 0;
+    }
+
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: ticker 32s linear infinite;
+    }
+
+    .ticker span {
+      padding-right: 2.5rem;
+      color: var(--lime);
+      font-size: .7rem;
+      letter-spacing: .13em;
+      white-space: nowrap;
+    }
+
+    /* GENERAL SECTIONS */
+
+    .section {
+      padding: clamp(6rem, 12vw, 12rem) var(--page-pad);
+      position: relative;
+    }
+
+    .section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: var(--page-pad);
+      right: var(--page-pad);
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        var(--lime),
+        var(--line) 22%,
+        var(--line) 78%,
+        transparent
+      );
+      opacity: .45;
+    }
+
+    .section-label {
+      display: block;
+      color: var(--muted);
+      font-size: .7rem;
+      letter-spacing: .1em;
+      margin-bottom: clamp(2.5rem, 6vw, 6rem);
+    }
+
+    .statement {
+      max-width: 16ch;
+      font-size: clamp(2.6rem, 7.8vw, 8rem);
+      letter-spacing: -.085em;
+      line-height: 1.03;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .statement .dim {
+      color: #777772;
+    }
+
+    /* PRODUCT */
+
+    .product-intro {
+      margin-top: clamp(7rem, 16vw, 16rem);
+    }
+
+    .micro-label {
+      font-size: .68rem;
+      color: var(--muted);
+      letter-spacing: .12em;
+      margin-bottom: 1.1rem;
+    }
+
+    .product-title {
+      margin: 0;
+      font-size: clamp(2.5rem, 10.7vw, 10.5rem);
+      letter-spacing: -.09em;
+      line-height: .98;
+      font-weight: 500;
+      overflow-wrap: anywhere;
+    }
+
+    .product-title::after {
+      content: "®";
+      display: inline-block;
+      font-size: .13em;
+      letter-spacing: 0;
+      vertical-align: top;
+      margin: .3em 0 0 .5em;
+      color: var(--lime);
+    }
+
+    .platforms {
+      color: var(--lime);
+      margin-top: 1.4rem;
+      font-size: .72rem;
+      letter-spacing: .12em;
+    }
+
+    .description-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      margin-top: 4rem;
+    }
+
+    .description-grid p {
+      color: var(--muted);
+      max-width: 34rem;
+      margin: 0;
+      font-size: .9rem;
+    }
+
+    .subsection {
+      margin-top: clamp(6rem, 12vw, 12rem);
+      display: grid;
+      grid-template-columns: minmax(130px, .55fr) 1.45fr;
+      gap: 2rem;
+      border-top: 1px solid var(--line);
+      padding-top: 1.5rem;
+    }
+
+    .subsection h3 {
+      font-size: .7rem;
+      letter-spacing: .1em;
+      font-weight: 400;
+      color: var(--muted);
+      margin: .35rem 0 0;
+    }
+
+    .subsection p {
+      max-width: 48rem;
+      font-size: clamp(1rem, 2.1vw, 1.7rem);
+      line-height: 1.45;
+      margin: 0;
+      letter-spacing: -.035em;
+    }
+
+    /* PRODUCT PRICES */
+
+    .buy-heading {
+      max-width: 17ch;
+      font-size: clamp(2.7rem, 7.5vw, 7.5rem);
+      letter-spacing: -.08em;
+      line-height: 1.05;
+      font-weight: 500;
+      margin: 0 0 5rem;
+    }
+
+    .platform-group {
+      margin-top: 4rem;
+    }
+
+    .platform-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px solid var(--fg);
+      padding-bottom: 1rem;
+      margin-bottom: .25rem;
+    }
+
+    .platform-heading h3 {
+      font-size: .75rem;
+      font-weight: 400;
+      letter-spacing: .1em;
+      margin: 0;
+    }
+
+    .platform-heading span {
+      color: var(--muted);
+      font-size: .68rem;
+    }
+
     .product-row {
-      display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(10rem, .8fr) auto;
-      align-items: center; gap: 1.5rem; padding: 1.35rem 0; border-bottom: 1px solid var(--line);
-      transition: padding .25s ease;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(10rem, .8fr) auto;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.35rem 0;
+      border-bottom: 1px solid var(--line);
+      transition: padding .25s ease, border-color .25s ease;
+      position: relative;
     }
-    .product-row:hover { padding-left: .5rem; padding-right: .5rem; }
-    .product-name { font-size: clamp(.85rem, 1.8vw, 1.25rem); letter-spacing: -.035em; }
-    .product-desc { color: var(--muted); font-size: .75rem; }
-    .price { font-size: .95rem; white-space: nowrap; }
-    .buy-notice { border-top: 1px solid var(--line); margin-top: 5rem; padding-top: 1.5rem; display: grid; grid-template-columns: .7fr 1.3fr; gap: 2rem; }
-    .buy-notice strong { font-weight: 500; font-size: .9rem; }
-    .buy-notice p { color: var(--muted); font-size: .8rem; margin: 0; max-width: 42rem; }
-    .contact-wrap { margin-top: 3rem; }
+
+    .product-row::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -1px;
+      width: 0;
+      height: 1px;
+      background: var(--lime);
+      transition: width .35s ease;
+    }
+
+    .product-row:hover {
+      padding-left: .5rem;
+      padding-right: .5rem;
+      border-color: rgba(217,255,69,.25);
+    }
+
+    .product-row:hover::before {
+      width: 100%;
+    }
+
+    .product-name {
+      font-size: clamp(.85rem, 1.8vw, 1.25rem);
+      letter-spacing: -.035em;
+    }
+
+    .product-desc {
+      color: var(--muted);
+      font-size: .75rem;
+    }
+
+    .price {
+      font-size: .95rem;
+      white-space: nowrap;
+    }
+
+    .buy-notice {
+      border-top: 1px solid var(--line);
+      margin-top: 5rem;
+      padding-top: 1.5rem;
+      display: grid;
+      grid-template-columns: .7fr 1.3fr;
+      gap: 2rem;
+    }
+
+    .buy-notice strong {
+      font-weight: 500;
+      font-size: .9rem;
+    }
+
+    .buy-notice p {
+      color: var(--muted);
+      font-size: .8rem;
+      margin: 0;
+      max-width: 42rem;
+    }
+
+    /* DEMO CHECKOUT */
+
+    .checkout {
+      margin-top: 4rem;
+      border: 1px solid var(--line);
+      padding: clamp(1.2rem, 3vw, 2.5rem);
+      position: relative;
+      background: linear-gradient(
+        135deg,
+        rgba(217,255,69,.035),
+        transparent 45%
+      );
+    }
+
+    .checkout::before {
+      content: "DEMO CHECKOUT / NVX-PAY-01";
+      position: absolute;
+      top: -.55rem;
+      left: 1rem;
+      padding: 0 .6rem;
+      background: var(--bg);
+      color: var(--lime);
+      font-size: .58rem;
+      letter-spacing: .12em;
+    }
+
+    .checkout-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 1rem;
+      margin: .6rem 0 2rem;
+    }
+
+    .checkout-heading h3 {
+      font-size: clamp(1.4rem, 3.5vw, 2.6rem);
+      letter-spacing: -.06em;
+      font-weight: 500;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    .demo-tag {
+      color: var(--lime);
+      border: 1px solid rgba(217,255,69,.4);
+      padding: .35rem .5rem;
+      font-size: .58rem;
+      letter-spacing: .1em;
+      white-space: nowrap;
+    }
+
+    .checkout-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: .55rem;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: .65rem;
+      letter-spacing: .09em;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 3.2rem;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      padding: .85rem .9rem;
+      background: #0c0c0b;
+      color: var(--fg);
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--lime);
+    }
+
+    .order-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding: 1rem 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .order-summary span:first-child {
+      color: var(--muted);
+      font-size: .68rem;
+    }
+
+    .order-summary strong {
+      font-size: 1.05rem;
+      font-weight: 500;
+    }
+
+    .checkout-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .checkout-submit {
+      cursor: pointer;
+      background: var(--lime);
+      color: var(--bg);
+      border: 1px solid var(--lime);
+      padding: 1rem 1.2rem;
+      font-size: .68rem;
+      letter-spacing: .08em;
+      transition: background .2s, color .2s;
+    }
+
+    .checkout-submit:hover {
+      background: transparent;
+      color: var(--lime);
+    }
+
+    .checkout-submit:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .checkout-legal {
+      color: var(--muted);
+      font-size: .68rem;
+      max-width: 34rem;
+      margin: 0;
+    }
+
+    .form-status {
+      min-height: 1.5rem;
+      color: var(--lime);
+      font-size: .75rem;
+      margin: 1rem 0 0;
+    }
+
+    .form-status.error {
+      color: var(--fg);
+    }
+
+    /* FOOTER */
+
+    .contact-wrap {
+      margin-top: 3rem;
+    }
+
     .contact-button {
-      display: inline-flex; align-items: center; justify-content: center; min-height: 3.2rem;
-      padding: .9rem 1.2rem; border: 1px solid var(--lime); color: var(--lime);
-      font-size: .7rem; letter-spacing: .08em; transition: background .25s ease, color .25s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 3.2rem;
+      padding: .9rem 1.2rem;
+      border: 1px solid var(--lime);
+      color: var(--lime);
+      font-size: .7rem;
+      letter-spacing: .08em;
+      transition: background .25s ease, color .25s ease;
     }
-    .contact-button:hover { background: var(--lime); color: var(--bg); }
-    .contact-note { color: var(--muted); font-size: .68rem; margin-top: .8rem; }
-    footer { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; align-items: center; padding: 1.5rem var(--page-pad) 2rem; border-top: 1px solid var(--line); font-size: .65rem; letter-spacing: .06em; }
-    footer span:nth-child(2) { text-align: center; color: var(--muted); }
-    footer a { text-align: right; transition: color .25s ease; }
-    footer a:hover { color: var(--lime); }
-    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.75,.2,1); }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-    @keyframes rotate { to { transform: rotate(360deg); } }
-    @keyframes ticker { to { transform: translateX(-50%); } }
-    @keyframes title-in { from { opacity: 0; transform: translateY(24px) translateX(-.035em); } to { opacity: 1; transform: translateY(0) translateX(-.035em); } }
+
+    .contact-button:hover {
+      background: var(--lime);
+      color: var(--bg);
+    }
+
+    .contact-note {
+      color: var(--muted);
+      font-size: .68rem;
+      margin-top: .8rem;
+    }
+
+    footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      align-items: center;
+      padding: 1.5rem var(--page-pad) 2rem;
+      border-top: 1px solid var(--line);
+      font-size: .65rem;
+      letter-spacing: .06em;
+    }
+
+    footer span:nth-child(2) {
+      text-align: center;
+      color: var(--muted);
+    }
+
+    footer a {
+      text-align: right;
+      transition: color .25s ease;
+    }
+
+    footer a:hover {
+      color: var(--lime);
+    }
+
+    /* SCROLL REVEALS */
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition:
+        opacity .8s ease,
+        transform .8s cubic-bezier(.2,.75,.2,1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes rotate {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes ticker {
+      to { transform: translateX(-50%); }
+    }
+
+    @keyframes title-in {
+      from {
+        opacity: 0;
+        transform: translateY(24px) translateX(-.035em);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) translateX(-.035em);
+      }
+    }
+
+    /* MOBILE */
+
     @media (max-width: 700px) {
-      .site-header { padding-top: 1rem; padding-bottom: 1rem; }
-      .nav { gap: .9rem; }
-      .nav a { font-size: .62rem; }
-      .hero { padding-top: 7rem; padding-bottom: 1.5rem; }
-      .hero-title { font-size: 19vw; }
-      .orbit { width: 105vw; }
-      .hero-bottom { align-items: start; flex-direction: column; gap: 2rem; }
-      .scroll-cue { align-self: flex-end; }
-      .description-grid { grid-template-columns: 1fr; gap: 1.2rem; margin-top: 2.5rem; }
-      .subsection { grid-template-columns: 1fr; gap: 1.1rem; }
-      .product-row { grid-template-columns: 1fr auto; gap: .45rem 1rem; }
-      .product-desc { grid-column: 1; grid-row: 2; }
-      .price { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
-      .buy-notice { grid-template-columns: 1fr; gap: 1rem; }
-      footer { grid-template-columns: 1fr auto; }
-      footer span:nth-child(2) { grid-column: 1; grid-row: 2; text-align: left; }
-      footer a { grid-column: 2; grid-row: 1 / span 2; }
+      .site-header {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+      }
+
+      .wordmark::after {
+        display: none;
+      }
+
+      .nav {
+        gap: .9rem;
+      }
+
+      .nav a {
+        font-size: .62rem;
+      }
+
+      .hero {
+        padding-top: 7rem;
+        padding-bottom: 1.5rem;
+      }
+
+      .hero-index {
+        top: 6.8rem;
+      }
+
+      .hero-status {
+        bottom: 6.6rem;
+        font-size: .5rem;
+      }
+
+      .hero-title {
+        font-size: 19vw;
+      }
+
+      .orbit {
+        width: 105vw;
+      }
+
+      .hero-bottom {
+        align-items: start;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .scroll-cue {
+        align-self: flex-end;
+      }
+
+      .description-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+        margin-top: 2.5rem;
+      }
+
+      .subsection {
+        grid-template-columns: 1fr;
+        gap: 1.1rem;
+      }
+
+      .product-row {
+        grid-template-columns: 1fr auto;
+        gap: .45rem 1rem;
+      }
+
+      .product-desc {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      .price {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-self: center;
+      }
+
+      .buy-notice {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .checkout-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field.full {
+        grid-column: auto;
+      }
+
+      .checkout-heading {
+        flex-direction: column;
+      }
+
+      footer {
+        grid-template-columns: 1fr auto;
+      }
+
+      footer span:nth-child(2) {
+        grid-column: 1;
+        grid-row: 2;
+        text-align: left;
+      }
+
+      footer a {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+      }
     }
+
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-      .reveal { opacity: 1; transform: none; }
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
     }
   </style>
 </head>
+
 <body>
   <header class="site-header">
     <a class="wordmark" href="#home" aria-label="NOVEX home">NOVEX</a>
+
     <nav class="nav" aria-label="Main navigation">
       <a href="#home">HOME</a>
       <a href="#info">INFO</a>
@@ -149,21 +977,42 @@
   </header>
 
   <main>
+    <!-- HOME -->
     <section class="hero" id="home" aria-labelledby="hero-title">
       <div class="eyebrow">INDEPENDENT SOFTWARE / NOVEX</div>
+
+      <div class="hero-index" aria-hidden="true">
+        NVX—001 / CREATIVE SYSTEMS
+      </div>
+
       <div class="hero-center" aria-hidden="true">
-        <div class="orbit"><span class="orbit-dot"></span></div>
+        <div class="orbit-crosshair"></div>
+        <div class="orbit-crosshair vertical"></div>
+        <div class="orbit">
+          <span class="orbit-dot"></span>
+        </div>
         <h1 class="hero-title" id="hero-title">NOVEX</h1>
       </div>
+
+      <div class="hero-status">
+        <span class="status-dot"></span>
+        INDEPENDENT BY DESIGN / EST. 2026
+      </div>
+
       <div class="hero-bottom">
         <div>
           <div class="eyebrow">SOFTWARE FOR SOUND.</div>
-          <p>Tools for sound, experimentation and making things that do not quite fit anywhere else.</p>
+          <p>
+            Tools for sound, experimentation and making things
+            that do not quite fit anywhere else.
+          </p>
         </div>
+
         <a class="scroll-cue" href="#info">SCROLL TO EXPLORE ↓</a>
       </div>
     </section>
 
+    <!-- MOVING TEXT -->
     <div class="ticker" aria-label="NOVEX product highlights">
       <div class="ticker-track" aria-hidden="true">
         <span>NOVEX / SUPERCOLLIDER / SOUND SOFTWARE / BUILT TO EXPERIMENT /</span>
@@ -171,62 +1020,237 @@
       </div>
     </div>
 
+    <!-- INFO -->
     <section class="section" id="info">
       <span class="section-label reveal">01 — INFO</span>
-      <h2 class="statement reveal">Software should give you room to make <span class="dim">something unexpected.</span></h2>
+
+      <h2 class="statement reveal">
+        Software should give you room to make
+        <span class="dim">something unexpected.</span>
+      </h2>
 
       <div class="product-intro reveal">
         <div class="micro-label">THE SOFTWARE</div>
+
         <h2 class="product-title">SUPERCOLLIDER</h2>
+
         <div class="platforms">MACOS / WINDOWS</div>
+
         <div class="description-grid">
-          <p>NOVEX is an independent software project focused on creative tools. SuperCollider is the main NOVEX product, with different editions planned for different ways of working.</p>
-          <p>Designed around experimentation, clear information and a straightforward experience. More details will be published as development progresses.</p>
+          <p>
+            NOVEX is an independent software project focused on creative
+            tools. SuperCollider is the main NOVEX product, with different
+            editions planned for different ways of working.
+          </p>
+
+          <p>
+            Designed around experimentation, clear information and a
+            straightforward experience. More details will be published
+            as development progresses.
+          </p>
         </div>
       </div>
 
       <div class="subsection reveal">
         <h3>OUR APPROACH</h3>
-        <p>Clear product information. Straightforward pricing. No fake warnings, misleading offers or pressure tactics.</p>
+        <p>
+          Clear product information. Straightforward pricing. No fake
+          warnings, misleading offers or pressure tactics.
+        </p>
       </div>
 
       <div class="subsection reveal">
         <h3>PRIVACY</h3>
-        <p>We do not sell your personal information. Information provided to NOVEX is not a product to be traded. We aim to explain clearly what is collected and why, before asking you to provide anything.</p>
+        <p>
+          We do not sell your personal information. Information provided
+          to NOVEX is not a product to be traded. We aim to explain clearly
+          what is collected and why, before asking you to provide anything.
+        </p>
       </div>
     </section>
 
+    <!-- BUY -->
     <section class="section" id="buy">
       <span class="section-label reveal">02 — BUY / EARLY ACCESS</span>
-      <h2 class="buy-heading reveal">Get an early look. Help shape what comes next.</h2>
+
+      <h2 class="buy-heading reveal">
+        Get an early look. Help shape what comes next.
+      </h2>
 
       <div class="platform-group reveal">
-        <div class="platform-heading"><h3>macOS EDITIONS</h3><span>PLANNED RELEASE</span></div>
-        <div class="product-row"><span class="product-name">NOVEX MODE A</span><span class="product-desc">Very limited edition</span><span class="price">$0.00</span></div>
-        <div class="product-row"><span class="product-name">NOVEX MODE G</span><span class="product-desc">Expanded edition</span><span class="price">$12.00</span></div>
-        <div class="product-row"><span class="product-name">NOVEX SuperCollider</span><span class="product-desc">Full edition</span><span class="price">$28.00</span></div>
+        <div class="platform-heading">
+          <h3>macOS EDITIONS</h3>
+          <span>PLANNED RELEASE</span>
+        </div>
+
+        <div class="product-row">
+          <span class="product-name">NOVEX MODE A</span>
+          <span class="product-desc">Very limited edition</span>
+          <span class="price">$0.00</span>
+        </div>
+
+        <div class="product-row">
+          <span class="product-name">NOVEX MODE G</span>
+          <span class="product-desc">Expanded edition</span>
+          <span class="price">$12.00</span>
+        </div>
+
+        <div class="product-row">
+          <span class="product-name">NOVEX SuperCollider</span>
+          <span class="product-desc">Full edition</span>
+          <span class="price">$28.00</span>
+        </div>
       </div>
 
       <div class="platform-group reveal">
-        <div class="platform-heading"><h3>WINDOWS EDITIONS</h3><span>PLANNED RELEASE</span></div>
-        <div class="product-row"><span class="product-name">NOVEX A</span><span class="product-desc">Very limited edition</span><span class="price">$0.00</span></div>
-        <div class="product-row"><span class="product-name">NOVEX OLIS</span><span class="product-desc">Expanded edition</span><span class="price">$12.00</span></div>
-        <div class="product-row"><span class="product-name">NOVEX GAMMER</span><span class="product-desc">Advanced edition</span><span class="price">$20.50</span></div>
-        <div class="product-row"><span class="product-name">NOVEX SuperCollider</span><span class="product-desc">Full edition</span><span class="price">$30.00</span></div>
+        <div class="platform-heading">
+          <h3>WINDOWS EDITIONS</h3>
+          <span>PLANNED RELEASE</span>
+        </div>
+
+        <div class="product-row">
+          <span class="product-name">NOVEX A</span>
+          <span class="product-desc">Very limited edition</span>
+          <span class="price">$0.00</span>
+        </div>
+
+        <div class="product-row">
+          <span class="product-name">NOVEX OLIS</span>
+          <span class="product-desc">Expanded edition</span>
+          <span class="price">$12.00</span>
+        </div>
+
+        <div class="product-row">
+          <span class="product-name">NOVEX GAMMER</span>
+          <span class="product-desc">Advanced edition</span>
+          <span class="price">$20.50</span>
+        </div>
+
+        <div class="product-row">
+          <span class="product-name">NOVEX SuperCollider</span>
+          <span class="product-desc">Full edition</span>
+          <span class="price">$30.00</span>
+        </div>
       </div>
 
       <div class="buy-notice reveal">
         <strong>Early access is not open for payment yet.</strong>
-        <p>These are planned prices, not a live checkout. No payment is being collected on this page. When early access opens, the purchase process and what is included will be explained here before you commit.</p>
+
+        <p>
+          These are planned prices, not a live checkout. No payment is
+          being collected on this page. When early access opens, the
+          purchase process and what is included will be explained here
+          before you commit.
+        </p>
       </div>
 
+      <!-- DEMO CHECKOUT: EMAIL ONLY -->
+      <form class="checkout reveal" id="demo-checkout">
+        <div class="checkout-heading">
+          <div>
+            <div class="micro-label">ORDER REQUEST / TEST MODE</div>
+            <h3>Reserve your edition.</h3>
+          </div>
+
+          <span class="demo-tag">NO PAYMENT TAKEN</span>
+        </div>
+
+        <div class="checkout-grid">
+          <div class="field full">
+            <label for="edition">SELECT EDITION</label>
+
+            <select id="edition" name="edition" required>
+              <option value="NOVEX MODE A|macOS|0.00">
+                NOVEX MODE A — macOS · $0.00
+              </option>
+
+              <option value="NOVEX MODE G|macOS|12.00">
+                NOVEX MODE G — macOS · $12.00
+              </option>
+
+              <option value="NOVEX SuperCollider|macOS|28.00">
+                NOVEX SuperCollider — macOS · $28.00
+              </option>
+
+              <option value="NOVEX A|Windows|0.00">
+                NOVEX A — Windows · $0.00
+              </option>
+
+              <option value="NOVEX OLIS|Windows|12.00">
+                NOVEX OLIS — Windows · $12.00
+              </option>
+
+              <option value="NOVEX GAMMER|Windows|20.50">
+                NOVEX GAMMER — Windows · $20.50
+              </option>
+
+              <option value="NOVEX SuperCollider|Windows|30.00">
+                NOVEX SuperCollider — Windows · $30.00
+              </option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label for="customer-email">YOUR EMAIL ADDRESS</label>
+
+            <input
+              id="customer-email"
+              name="customer_email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+              maxlength="254"
+            >
+          </div>
+        </div>
+
+        <div class="order-summary">
+          <span>DEMO ORDER TOTAL / NOT CHARGED</span>
+          <strong id="order-total">$0.00</strong>
+        </div>
+
+        <div class="checkout-actions">
+          <button
+            class="checkout-submit"
+            id="checkout-submit"
+            type="submit"
+          >
+            SEND DEMO ORDER ↗
+          </button>
+
+          <p class="checkout-legal">
+            This is a demo request only. No payment details are collected
+            and no purchase is made. Submitting sends your selected
+            edition and email address through EmailJS.
+          </p>
+        </div>
+
+        <p
+          class="form-status"
+          id="form-status"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </form>
+
       <div class="contact-wrap reveal">
-        <a class="contact-button" href="mailto:contact@novex.example?subject=NOVEX%20Early%20Access%20Enquiry">ASK ABOUT EARLY ACCESS ↗</a>
-        <p class="contact-note">Contact link is a placeholder. Replace it with your official NOVEX email before publishing.</p>
+        <a
+          class="contact-button"
+          href="mailto:contact@novex.example?subject=NOVEX%20Early%20Access%20Enquiry"
+        >
+          ASK ABOUT EARLY ACCESS ↗
+        </a>
+
+        <p class="contact-note">
+          Replace the placeholder contact address with your official
+          NOVEX email before publishing.
+        </p>
       </div>
     </section>
   </main>
 
+  <!-- FOOTER -->
   <footer>
     <span>NOVEX © 2026</span>
     <span>SOFTWARE FOR SOUND.</span>
@@ -234,22 +1258,140 @@
   </footer>
 
   <script>
+    // EMAILJS CONFIGURATION
+
+    if (window.emailjs) {
+      emailjs.init({
+        publicKey: "UVtQ8eeIBGmH2irS8"
+      });
+    }
+
+    // SCROLL ANIMATIONS
+
     (() => {
-      const items = document.querySelectorAll('.reveal');
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduceMotion || !('IntersectionObserver' in window)) {
-        items.forEach(item => item.classList.add('visible'));
+      const items = document.querySelectorAll(".reveal");
+
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      if (
+        reduceMotion ||
+        !("IntersectionObserver" in window)
+      ) {
+        items.forEach(item => item.classList.add("visible"));
         return;
       }
-      const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            obs.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.12 });
+
+      const observer = new IntersectionObserver(
+        (entries, obs) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              obs.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.12 }
+      );
+
       items.forEach(item => observer.observe(item));
+    })();
+
+    // DEMO CHECKOUT
+
+    (() => {
+      const form = document.getElementById("demo-checkout");
+      const edition = document.getElementById("edition");
+      const total = document.getElementById("order-total");
+      const status = document.getElementById("form-status");
+      const submit = document.getElementById("checkout-submit");
+
+      function selectedProduct() {
+        const [productName, platform, price] =
+          edition.value.split("|");
+
+        return {
+          productName,
+          platform,
+          price
+        };
+      }
+
+      function updateTotal() {
+        const product = selectedProduct();
+
+        total.textContent =
+          "$" + Number(product.price).toFixed(2);
+      }
+
+      edition.addEventListener("change", updateTotal);
+      updateTotal();
+
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        status.classList.remove("error");
+
+        if (!window.emailjs) {
+          status.textContent =
+            "Email service did not load. Please try again later.";
+
+          status.classList.add("error");
+          return;
+        }
+
+        const product = selectedProduct();
+
+        const customerEmail = document
+          .getElementById("customer-email")
+          .value
+          .trim();
+
+        const emailParams = {
+          customer_email: customerEmail,
+          reply_to: customerEmail,
+          product_name: product.productName,
+          platform: product.platform,
+          product_price:
+            "$" + Number(product.price).toFixed(2),
+          order_type:
+            "DEMO ORDER REQUEST — NO PAYMENT TAKEN",
+          message:
+            "Demo order request only. No payment was collected."
+        };
+
+        submit.disabled = true;
+        submit.textContent = "SENDING REQUEST…";
+        status.textContent = "";
+
+        try {
+          await emailjs.send(
+            "service_cplsproductions",
+            "template_obq3cdb",
+            emailParams
+          );
+
+          status.textContent =
+            "Demo request sent successfully. No payment was taken.";
+
+          form.reset();
+          updateTotal();
+
+        } catch (error) {
+          console.error("EmailJS send failed:", error);
+
+          status.textContent =
+            "Could not send the request. Check the EmailJS service, " +
+            "template and template variable names, then try again.";
+
+          status.classList.add("error");
+
+        } finally {
+          submit.disabled = false;
+          submit.textContent = "SEND DEMO ORDER ↗";
+        }
+      });
     })();
   </script>
 </body>
